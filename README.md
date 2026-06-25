@@ -32,6 +32,15 @@ cp context/domain-knowledge.md context/domain-knowledge.local.md
 
 `*.local.md` files are ignored by git. This is the main extension point: the generic coach stays public, while personal profile, employer context, target role, and private notes stay local.
 
+## Reference Library
+
+The coach supports a reusable reference layer:
+
+- `references/*.md` — public, generic reference principles
+- `references.local/*.md` — private, licensed, or personally curated notes ignored by git
+
+This allows the coach to answer cross-person general career questions first, then personalize when a local profile is present. See [docs/REFERENCE_SYSTEM.md](docs/REFERENCE_SYSTEM.md).
+
 ## What This Builds
 
 The goal is a local-first career coaching assistant that can help with:
@@ -58,7 +67,12 @@ career-coach/
 │   ├── domain-knowledge.md
 │   ├── domain-knowledge.local.md  # private, ignored by git
 │   └── coaching-principles.md
+├── references/
+│   ├── career-frameworks.md
+│   └── lenny-podcast-starter.md
+├── references.local/              # private, ignored by git
 ├── templates/
+│   ├── general-coaching.md
 │   ├── weekly-review.md
 │   ├── mock-interview.md
 │   ├── resume-review.md
@@ -77,6 +91,8 @@ career-coach/
 | `context/profile.example.md` | A sanitized profile schema users can copy and fill locally |
 | `context/domain-knowledge.md` | Role, industry, market, or function-specific knowledge |
 | `context/coaching-principles.md` | Rules for how the coach should diagnose, challenge, and recommend |
+| `references/` | Public generic reference principles |
+| `references.local/` | Private or licensed reference notes ignored by git |
 | `templates/` | Repeatable workflows for common career scenarios |
 | `index.html` | Generic front-end template for the coaching experience |
 | `server.py` | Local backend that loads context, assembles prompts, and calls a model provider |
@@ -95,8 +111,9 @@ career-coach/
 2. Copy `context/profile.example.md` to a private local file such as `context/profile.local.md`.
 3. Fill in role, goals, constraints, target companies, and recurring challenges.
 4. Optionally create `context/domain-knowledge.local.md` for role or industry-specific context.
-5. Set `DEEPSEEK_API_KEY` or `OPENAI_API_KEY` for real model responses.
-6. Save only sanitized learnings back into the public project.
+5. Add private reference digests under `references.local/` if you have licensed or self-written notes.
+6. Set `DEEPSEEK_API_KEY` or `OPENAI_API_KEY` for real model responses.
+7. Save only sanitized learnings back into the public project.
 
 ## Privacy Boundary
 
@@ -145,6 +162,15 @@ cp context/domain-knowledge.md context/domain-knowledge.local.md
 
 `*.local.md` 已经被 `.gitignore` 忽略。这就是主要扩展口：通用 Career Coach 保持公开，个人画像、雇主上下文、目标岗位和私人笔记留在本地。
 
+## Reference 知识库
+
+这个 coach 支持可复用 reference 层：
+
+- `references/*.md`：公开、通用的职业原则和 source schema
+- `references.local/*.md`：私有、授权或个人整理的笔记，默认不进 git
+
+这样它可以先处理跨个体的通用职业问题；如果本地有个人画像，再进一步个性化。详见 [docs/REFERENCE_SYSTEM.md](docs/REFERENCE_SYSTEM.md)。
+
 ## 这个项目构建什么
 
 目标是一个 local-first 的职业教练助手，支持：
@@ -171,7 +197,12 @@ career-coach/
 │   ├── domain-knowledge.md
 │   ├── domain-knowledge.local.md  # private, ignored by git
 │   └── coaching-principles.md
+├── references/
+│   ├── career-frameworks.md
+│   └── lenny-podcast-starter.md
+├── references.local/              # private, ignored by git
 ├── templates/
+│   ├── general-coaching.md
 │   ├── weekly-review.md
 │   ├── mock-interview.md
 │   ├── resume-review.md
@@ -190,6 +221,8 @@ career-coach/
 | `context/profile.example.md` | 可复制的脱敏用户画像 schema |
 | `context/domain-knowledge.md` | 岗位、行业、市场或职能知识 |
 | `context/coaching-principles.md` | 定义教练如何诊断、挑战和给建议 |
+| `references/` | 公开通用 reference 原则 |
+| `references.local/` | 私有或授权 reference 笔记，默认不进 git |
 | `templates/` | 常见职业场景的可复用工作流 |
 | `index.html` | 通用前端体验模板 |
 | `server.py` | 本地后端，负责加载上下文、组装 prompt、调用模型 |
@@ -208,8 +241,9 @@ career-coach/
 2. 将 `context/profile.example.md` 复制为本地私有文件，例如 `context/profile.local.md`。
 3. 填入岗位、目标、约束、目标公司和反复出现的挑战。
 4. 可选：创建 `context/domain-knowledge.local.md`，补充岗位或行业上下文。
-5. 设置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`，启用真实模型回复。
-6. 只把脱敏后的学习沉淀保存回 public 项目。
+5. 如果你有授权资料或自己整理的笔记，放到 `references.local/`。
+6. 设置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`，启用真实模型回复。
+7. 只把脱敏后的学习沉淀保存回 public 项目。
 
 ## 隐私边界
 

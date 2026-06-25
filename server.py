@@ -8,6 +8,7 @@ Run:
 Personalize locally:
   cp context/profile.example.md context/profile.local.md
   cp context/domain-knowledge.md context/domain-knowledge.local.md
+  add licensed/private notes under references.local/
 
 The *.local.md files are ignored by git.
 """
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parent
 PORT = int(os.getenv("PORT", "8421"))
 
 MODES = {
+    "general-coaching": "templates/general-coaching.md",
     "weekly-review": "templates/weekly-review.md",
     "mock-interview": "templates/mock-interview.md",
     "resume-review": "templates/resume-review.md",
@@ -37,16 +39,50 @@ def read_text(path, fallback=""):
     return fallback
 
 
+def read_markdown_dir(path, limit_chars=24000):
+    dir_path = ROOT / path
+    if not dir_path.exists():
+        return "", 0
+    chunks = []
+    count = 0
+    total = 0
+    for file_path in sorted(dir_path.rglob("*.md")):
+        if file_path.name.lower() == "readme.md":
+            continue
+        text = file_path.read_text(encoding="utf-8").strip()
+        if not text:
+            continue
+        header = f"\n\n## Source: {file_path.relative_to(ROOT)}\n"
+        piece = header + text
+        if total + len(piece) > limit_chars:
+            remaining = limit_chars - total
+            if remaining > len(header) + 500:
+                chunks.append(piece[:remaining])
+                count += 1
+            break
+        chunks.append(piece)
+        count += 1
+        total += len(piece)
+    return "\n".join(chunks), count
+
+
 def read_context():
     profile = read_text("context/profile.local.md") or read_text("context/profile.example.md")
     domain = read_text("context/domain-knowledge.local.md") or read_text("context/domain-knowledge.md")
     principles = read_text("context/coaching-principles.md")
+    public_refs, public_ref_count = read_markdown_dir("references")
+    private_refs, private_ref_count = read_markdown_dir("references.local")
     return {
         "profile": profile,
         "domain": domain,
         "principles": principles,
+        "public_refs": public_refs,
+        "private_refs": private_refs,
+        "public_ref_count": public_ref_count,
+        "private_ref_count": private_ref_count,
         "has_private_profile": (ROOT / "context/profile.local.md").exists(),
         "has_private_domain": (ROOT / "context/domain-knowledge.local.md").exists(),
+        "has_private_refs": private_ref_count > 0,
     }
 
 
@@ -55,7 +91,15 @@ def build_messages(mode, user_message):
     template = read_text(MODES.get(mode, MODES["weekly-review"]))
     system = f"""You are a private local AI career coach.
 
-Use the provided context and workflow. Diagnose before advising. Avoid generic motivation. End with one practical next action.
+Use the provided context, reference library, and workflow.
+
+Coaching rules:
+- If the user asks a general career question, answer from the public reference library and domain knowledge without requiring a personal profile.
+- If the answer depends on individual context, ask up to two diagnostic questions before advising.
+- If a private profile or private references are present, use them to personalize the answer.
+- Do not fabricate source details. If the reference library does not support a claim, say what additional source is needed.
+- Avoid generic motivation. Name the tradeoff behind the recommendation.
+- End with one practical next action.
 
 ## User Profile
 {context["profile"]}
@@ -65,6 +109,12 @@ Use the provided context and workflow. Diagnose before advising. Avoid generic m
 
 ## Coaching Principles
 {context["principles"]}
+
+## Public Reference Library
+{context["public_refs"] or "No public references loaded."}
+
+## Private / Local Reference Notes
+{context["private_refs"] or "No private local reference notes loaded."}
 
 ## Workflow
 {template}
@@ -143,6 +193,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({
                 "hasPrivateProfile": context["has_private_profile"],
                 "hasPrivateDomain": context["has_private_domain"],
+                "hasPrivateReferences": context["has_private_refs"],
+                "publicReferenceCount": context["public_ref_count"],
+                "privateReferenceCount": context["private_ref_count"],
                 "hasDeepSeek": bool(os.getenv("DEEPSEEK_API_KEY")),
                 "hasOpenAI": bool(os.getenv("OPENAI_API_KEY")),
             })

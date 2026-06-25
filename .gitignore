@@ -1,5 +1,6 @@
 profile.local.md
 *.local.md
+references.local/*.md
 .env
 .env.*
 *.log

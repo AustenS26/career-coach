@@ -265,7 +265,11 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
     <div>
       <p class="section-title">Workflows</p>
       <div class="workflow-list">
-        <button class="workflow active" data-title="Weekly Review" data-subtitle="Find leverage, blockers, and one action for next week">
+        <button class="workflow active" data-title="General Coaching" data-subtitle="Answer cross-person career questions from references first">
+          <b>General Coaching</b>
+          <span>Use references before personal context.</span>
+        </button>
+        <button class="workflow" data-title="Weekly Review" data-subtitle="Find leverage, blockers, and one action for next week">
           <b>Weekly Review</b>
           <span>Review impact, constraints, and next action.</span>
         </button>
@@ -340,6 +344,7 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
       <h2>Context Layers</h2>
       <div class="kv">
         <div><span>Generic frameworks</span><b>Public</b></div>
+        <div><span>Reference library</span><b id="referenceStatus">Loading</b></div>
         <div><span>Domain knowledge</span><b>Public or curated</b></div>
         <div><span>User profile</span><b>Private local</b></div>
         <div><span>Session notes</span><b>Private local</b></div>
@@ -352,7 +357,8 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
         <span class="tag">profile.example.md</span>
         <span class="tag">domain-knowledge.md</span>
         <span class="tag">coaching-principles.md</span>
-        <span class="tag" id="activeTemplate">weekly-review.md</span>
+        <span class="tag">references/*.md</span>
+        <span class="tag" id="activeTemplate">general-coaching.md</span>
       </div>
     </div>
 
@@ -375,8 +381,9 @@ const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const statusText = document.getElementById('appStatus');
 const activeTemplate = document.getElementById('activeTemplate');
-let activeMode = 'weekly-review';
+let activeMode = 'general-coaching';
 const copy = {
+  'General Coaching': 'Ask a general career question. I will answer from loaded references first, then ask for personal context only if needed.',
   'Weekly Review': 'Start with the most important work from this week. What created visible impact, and who noticed it?',
   'Mock Interview': 'Tell me the target role, seniority, and company type. I will ask one question and score the answer against a rubric.',
   'Resume Review': 'Paste the target role and resume text. I will review positioning, proof, relevance, and clarity.',
@@ -434,8 +441,10 @@ fetch('/api/status')
   .then(response => response.json())
   .then(data => {
     const profile = data.hasPrivateProfile ? 'private profile loaded' : 'example profile loaded';
+    const refs = `${data.publicReferenceCount || 0} public refs, ${data.privateReferenceCount || 0} private refs`;
     const model = data.hasDeepSeek || data.hasOpenAI ? 'model enabled' : 'preview mode';
-    statusText.textContent = profile + ', ' + model;
+    document.getElementById('referenceStatus').textContent = refs;
+    statusText.textContent = profile + ', ' + refs + ', ' + model;
   })
   .catch(() => {
     statusText.textContent = 'Open through server.py for backend mode';
