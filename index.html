@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Career Coach Template</title>
+<style>
+:root{
+  --bg:#f6f4ef;
+  --panel:#ffffff;
+  --panel-2:#f8faf7;
+  --text:#17201b;
+  --muted:#68736d;
+  --line:#d8ded7;
+  --green:#246b4f;
+  --blue:#2e5f8f;
+  --red:#9b4a3f;
+  --yellow:#d8a328;
+  --shadow:0 18px 45px rgba(31,43,36,.12);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  letter-spacing:0;
+}
+button,input,textarea{font:inherit}
+.shell{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr) 340px;
+}
+.rail{
+  border-right:1px solid var(--line);
+  background:#fbfaf7;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.mark{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font-weight:800;
+}
+.brand h1{font-size:16px;margin:0;line-height:1.1}
+.brand p{font-size:12px;color:var(--muted);margin:2px 0 0}
+.section-title{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:700;
+  margin:0 0 8px;
+}
+.workflow-list{display:grid;gap:8px}
+.workflow{
+  width:100%;
+  text-align:left;
+  border:1px solid var(--line);
+  background:var(--panel);
+  border-radius:8px;
+  padding:10px;
+  cursor:pointer;
+}
+.workflow.active{border-color:var(--green);box-shadow:0 0 0 2px rgba(36,107,79,.12)}
+.workflow b{display:block;font-size:13px;margin-bottom:3px}
+.workflow span{display:block;font-size:12px;line-height:1.35;color:var(--muted)}
+.privacy{
+  margin-top:auto;
+  border:1px solid #ead8bb;
+  background:#fffaf0;
+  border-radius:8px;
+  padding:12px;
+}
+.privacy b{display:block;font-size:13px;margin-bottom:5px}
+.privacy p{font-size:12px;color:#725a2b;line-height:1.45;margin:0}
+.main{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.topbar{
+  height:64px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(12px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+}
+.topbar h2{font-size:17px;margin:0}
+.topbar p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.status{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  color:var(--muted);
+  font-size:12px;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.chat{
+  flex:1;
+  overflow:auto;
+  padding:24px;
+  display:grid;
+  align-content:start;
+  gap:14px;
+}
+.message{
+  max-width:760px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  padding:14px 15px;
+  box-shadow:0 8px 24px rgba(31,43,36,.06);
+}
+.message.user{
+  justify-self:end;
+  background:#eef5ff;
+  border-color:#cfdcec;
+}
+.message h3{font-size:14px;margin:0 0 8px}
+.message p,.message li{font-size:14px;line-height:1.55;color:#26312c}
+.message p{margin:0 0 8px}
+.message ul{margin:8px 0 0;padding-left:18px}
+.rubric{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+.rubric div{
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:9px;
+  background:var(--panel-2);
+}
+.rubric b{font-size:12px;display:block}
+.rubric span{font-size:12px;color:var(--muted)}
+.composer{
+  border-top:1px solid var(--line);
+  background:#fff;
+  padding:14px 22px;
+}
+.composer-inner{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:end;
+}
+textarea{
+  min-height:54px;
+  max-height:110px;
+  resize:vertical;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  outline:none;
+}
+textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12)}
+.send{
+  height:54px;
+  border:0;
+  border-radius:8px;
+  background:var(--green);
+  color:#fff;
+  font-weight:700;
+  padding:0 18px;
+  cursor:pointer;
+}
+.side{
+  border-left:1px solid var(--line);
+  background:#fbfaf7;
+  padding:18px;
+  overflow:auto;
+}
+.panel{
+  border:1px solid var(--line);
+  background:var(--panel);
+  border-radius:8px;
+  padding:14px;
+  margin-bottom:14px;
+}
+.panel h2{font-size:14px;margin:0 0 10px}
+.kv{display:grid;gap:8px}
+.kv div{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-size:12px;
+  padding-bottom:7px;
+  border-bottom:1px solid #eef1ed;
+}
+.kv div:last-child{border-bottom:0;padding-bottom:0}
+.kv span{color:var(--muted)}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px}
+.tag{
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:12px;
+  background:var(--panel-2);
+}
+.timeline{display:grid;gap:10px}
+.step{
+  display:grid;
+  grid-template-columns:18px 1fr;
+  gap:9px;
+  font-size:12px;
+  color:var(--muted);
+}
+.step i{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--line);
+  display:block;
+}
+.step.done i{background:var(--green)}
+.step.now i{background:var(--yellow)}
+.step b{display:block;color:var(--text);font-size:12px;margin-bottom:2px}
+@media (max-width:1060px){
+  .shell{grid-template-columns:240px minmax(0,1fr)}
+  .side{display:none}
+}
+@media (max-width:760px){
+  .shell{display:block}
+  .rail{border-right:0;border-bottom:1px solid var(--line)}
+  .workflow-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topbar{height:auto;padding:14px}
+  .chat{padding:14px}
+  .rubric{grid-template-columns:1fr}
+  .composer{padding:12px}
+  .composer-inner{grid-template-columns:1fr}
+  .send{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">CC</div>
+      <div>
+        <h1>Career Coach</h1>
+        <p>Local-first AI coaching template</p>
+      </div>
+    </div>
+
+    <div>
+      <p class="section-title">Workflows</p>
+      <div class="workflow-list">
+        <button class="workflow active" data-title="Weekly Review" data-subtitle="Find leverage, blockers, and one action for next week">
+          <b>Weekly Review</b>
+          <span>Review impact, constraints, and next action.</span>
+        </button>
+        <button class="workflow" data-title="Mock Interview" data-subtitle="Practice one question at a time with rubric feedback">
+          <b>Mock Interview</b>
+          <span>Run role-specific interview practice.</span>
+        </button>
+        <button class="workflow" data-title="Resume Review" data-subtitle="Check positioning, proof, relevance, and clarity">
+          <b>Resume Review</b>
+          <span>Turn experience into targeted evidence.</span>
+        </button>
+        <button class="workflow" data-title="Strategy Review" data-subtitle="Test logic, evidence, tradeoffs, and audience fit">
+          <b>Strategy Review</b>
+          <span>Review documents before stakeholder review.</span>
+        </button>
+        <button class="workflow" data-title="Offer Evaluation" data-subtitle="Compare learning, scope, risk, compensation, and optionality">
+          <b>Offer Evaluation</b>
+          <span>Make career decisions with explicit tradeoffs.</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="privacy">
+      <b>Privacy boundary</b>
+      <p>Keep filled profiles, resumes, compensation, work logs, and employer-specific context outside the public repository.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h2 id="modeTitle">Weekly Review</h2>
+        <p id="modeSub">Find leverage, blockers, and one action for next week</p>
+      </div>
+      <div class="status"><span class="dot"></span><span id="appStatus">Checking local context</span></div>
+    </header>
+
+    <section class="chat" id="chat">
+      <article class="message">
+        <h3>Coach</h3>
+        <p>Start with the most important work from this week. What created visible impact, and who noticed it?</p>
+        <div class="rubric">
+          <div><b>Signal</b><span>Impact evidence</span></div>
+          <div><b>Constraint</b><span>What blocked progress</span></div>
+          <div><b>Action</b><span>One move in 7 days</span></div>
+        </div>
+      </article>
+      <article class="message user">
+        <h3>User</h3>
+        <p>I shipped a stakeholder-facing analysis, but I am not sure it changed the roadmap conversation.</p>
+      </article>
+      <article class="message">
+        <h3>Coach</h3>
+        <p>Separate the work into output and influence. The output was the analysis. The influence test is whether it changed a decision, reduced uncertainty, or gave a stakeholder language they reused.</p>
+        <ul>
+          <li>Send a 5-line follow-up asking which assumption is now accepted, rejected, or still open.</li>
+          <li>Turn the answer into next week's single visible artifact.</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="composer">
+      <div class="composer-inner">
+        <textarea id="input" placeholder="Type a scenario. The local backend will combine this with the selected workflow and your private local context files."></textarea>
+        <button class="send" type="button">Preview</button>
+      </div>
+    </footer>
+  </main>
+
+  <aside class="side">
+    <div class="panel">
+      <h2>Context Layers</h2>
+      <div class="kv">
+        <div><span>Generic frameworks</span><b>Public</b></div>
+        <div><span>Domain knowledge</span><b>Public or curated</b></div>
+        <div><span>User profile</span><b>Private local</b></div>
+        <div><span>Session notes</span><b>Private local</b></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Loaded Sources</h2>
+      <div class="tag-row">
+        <span class="tag">profile.example.md</span>
+        <span class="tag">domain-knowledge.md</span>
+        <span class="tag">coaching-principles.md</span>
+        <span class="tag" id="activeTemplate">weekly-review.md</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Roadmap</h2>
+      <div class="timeline">
+        <div class="step done"><i></i><div><b>V1 Markdown coach</b>Context schema and workflow templates.</div></div>
+        <div class="step now"><i></i><div><b>V2 Front-end template</b>Reference UI for a local web app.</div></div>
+        <div class="step"><i></i><div><b>V3 Model integration</b>Provider adapter and local storage.</div></div>
+        <div class="step"><i></i><div><b>V4 Privacy tooling</b>Redaction checks and encrypted notes.</div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const title = document.getElementById('modeTitle');
+const sub = document.getElementById('modeSub');
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const statusText = document.getElementById('appStatus');
+const activeTemplate = document.getElementById('activeTemplate');
+let activeMode = 'weekly-review';
+const copy = {
+  'Weekly Review': 'Start with the most important work from this week. What created visible impact, and who noticed it?',
+  'Mock Interview': 'Tell me the target role, seniority, and company type. I will ask one question and score the answer against a rubric.',
+  'Resume Review': 'Paste the target role and resume text. I will review positioning, proof, relevance, and clarity.',
+  'Strategy Review': 'Share the document goal, audience, and decision needed. I will test logic, evidence, tradeoffs, and audience fit.',
+  'Offer Evaluation': 'List the role, compensation, scope, manager signal, alternatives, and constraints. I will compare tradeoffs.'
+};
+document.querySelectorAll('.workflow').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.workflow').forEach(item => item.classList.remove('active'));
+    button.classList.add('active');
+    title.textContent = button.dataset.title;
+    sub.textContent = button.dataset.subtitle;
+    chat.querySelector('.message p').textContent = copy[button.dataset.title];
+    activeMode = button.dataset.title.toLowerCase().replaceAll(' ', '-');
+    activeTemplate.textContent = activeMode + '.md';
+  });
+});
+
+function addMessage(role, text) {
+  const article = document.createElement('article');
+  article.className = role === 'user' ? 'message user' : 'message';
+  const heading = document.createElement('h3');
+  heading.textContent = role === 'user' ? 'User' : 'Coach';
+  const body = document.createElement('p');
+  body.textContent = text;
+  article.appendChild(heading);
+  article.appendChild(body);
+  chat.appendChild(article);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+document.querySelector('.send').addEventListener('click', async () => {
+  const message = input.value.trim();
+  if (!message) return;
+  addMessage('user', message);
+  input.value = '';
+  statusText.textContent = 'Generating response';
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({mode: activeMode, message})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Request failed');
+    addMessage('coach', data.reply);
+    statusText.textContent = 'Ready';
+  } catch (error) {
+    addMessage('coach', 'Backend is unavailable. Start it with: python3 server.py');
+    statusText.textContent = 'Backend unavailable';
+  }
+});
+
+fetch('/api/status')
+  .then(response => response.json())
+  .then(data => {
+    const profile = data.hasPrivateProfile ? 'private profile loaded' : 'example profile loaded';
+    const model = data.hasDeepSeek || data.hasOpenAI ? 'model enabled' : 'preview mode';
+    statusText.textContent = profile + ', ' + model;
+  })
+  .catch(() => {
+    statusText.textContent = 'Open through server.py for backend mode';
+  });
+</script>
+</body>
+</html>
