@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import datetime
 import urllib.request
 
 ROOT = Path(__file__).resolve().parent
@@ -29,6 +30,7 @@ MODES = {
     "resume-review": "templates/resume-review.md",
     "strategy-review": "templates/strategy-review.md",
     "offer-evaluation": "templates/offer-evaluation.md",
+    "self-review": "templates/self-review.md",
 }
 
 
@@ -72,17 +74,21 @@ def read_context():
     principles = read_text("context/coaching-principles.md")
     public_refs, public_ref_count = read_markdown_dir("references")
     private_refs, private_ref_count = read_markdown_dir("references.local")
+    learnings, learning_count = read_markdown_dir("learning.local")
     return {
         "profile": profile,
         "domain": domain,
         "principles": principles,
         "public_refs": public_refs,
         "private_refs": private_refs,
+        "learnings": learnings,
         "public_ref_count": public_ref_count,
         "private_ref_count": private_ref_count,
+        "learning_count": learning_count,
         "has_private_profile": (ROOT / "context/profile.local.md").exists(),
         "has_private_domain": (ROOT / "context/domain-knowledge.local.md").exists(),
         "has_private_refs": private_ref_count > 0,
+        "has_local_learnings": learning_count > 0,
     }
 
 
@@ -97,6 +103,7 @@ Coaching rules:
 - If the user asks a general career question, answer from the public reference library and domain knowledge without requiring a personal profile.
 - If the answer depends on individual context, ask up to two diagnostic questions before advising.
 - If a private profile or private references are present, use them to personalize the answer.
+- If local learning notes are present, use them to avoid repeated coaching mistakes and improve future responses.
 - Do not fabricate source details. If the reference library does not support a claim, say what additional source is needed.
 - Avoid generic motivation. Name the tradeoff behind the recommendation.
 - End with one practical next action.
@@ -115,6 +122,9 @@ Coaching rules:
 
 ## Private / Local Reference Notes
 {context["private_refs"] or "No private local reference notes loaded."}
+
+## Local Coach Learning Notes
+{context["learnings"] or "No local learning notes loaded."}
 
 ## Workflow
 {template}
@@ -141,9 +151,7 @@ def call_openai_compatible(base_url, api_key, model, messages):
     return data["choices"][0]["message"]["content"]
 
 
-def generate_reply(mode, user_message):
-    messages = build_messages(mode, user_message)
-
+def generate_from_messages(messages):
     if os.getenv("DEEPSEEK_API_KEY"):
         return call_openai_compatible(
             "https://api.deepseek.com",
@@ -170,6 +178,44 @@ def generate_reply(mode, user_message):
     )
 
 
+def generate_reply(mode, user_message):
+    return generate_from_messages(build_messages(mode, user_message))
+
+
+def reflect_on_session(mode, messages):
+    transcript = "\n".join(
+        f"{item.get('role', '').upper()}: {item.get('content', '')}"
+        for item in messages
+        if item.get("role") in ("user", "coach", "assistant")
+    )
+    template = read_text("templates/self-review.md")
+    prompt = f"""Review this Career Coach session.
+
+Mode: {mode}
+
+{template}
+
+Transcript:
+{transcript}
+"""
+    return generate_from_messages([
+        {"role": "system", "content": "You are a strict QA reviewer for a local AI career coach. Be concise, concrete, and improvement-oriented."},
+        {"role": "user", "content": prompt},
+    ])
+
+
+def save_learning(reflection):
+    path = ROOT / "learning.local" / "coach-learnings.md"
+    path.parent.mkdir(exist_ok=True)
+    today = datetime.date.today().isoformat()
+    entry = f"\n\n## {today}\n\n{reflection.strip()}\n"
+    if not path.exists():
+        path.write_text("# Coach Learning Log\n\nPrivate local notes from self-review. Do not commit.\n", encoding="utf-8")
+    with path.open("a", encoding="utf-8") as file:
+        file.write(entry)
+    return str(path)
+
+
 class Handler(BaseHTTPRequestHandler):
     def send_json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -194,8 +240,10 @@ class Handler(BaseHTTPRequestHandler):
                 "hasPrivateProfile": context["has_private_profile"],
                 "hasPrivateDomain": context["has_private_domain"],
                 "hasPrivateReferences": context["has_private_refs"],
+                "hasLocalLearnings": context["has_local_learnings"],
                 "publicReferenceCount": context["public_ref_count"],
                 "privateReferenceCount": context["private_ref_count"],
+                "learningCount": context["learning_count"],
                 "hasDeepSeek": bool(os.getenv("DEEPSEEK_API_KEY")),
                 "hasOpenAI": bool(os.getenv("OPENAI_API_KEY")),
             })
@@ -203,11 +251,32 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def do_POST(self):
-        if self.path != "/api/chat":
+        if self.path not in ("/api/chat", "/api/reflect", "/api/save-learning"):
             self.send_error(404)
             return
         length = int(self.headers.get("Content-Length", "0"))
         data = json.loads(self.rfile.read(length).decode("utf-8"))
+        if self.path == "/api/reflect":
+            messages = data.get("messages", [])
+            mode = data.get("mode", "general-coaching")
+            if not messages:
+                self.send_json({"error": "messages are required"}, status=400)
+                return
+            try:
+                self.send_json({"reflection": reflect_on_session(mode, messages)})
+            except Exception as exc:
+                self.send_json({"error": str(exc)}, status=500)
+            return
+        if self.path == "/api/save-learning":
+            reflection = data.get("reflection", "").strip()
+            if not reflection:
+                self.send_json({"error": "reflection is required"}, status=400)
+                return
+            try:
+                self.send_json({"ok": True, "path": save_learning(reflection)})
+            except Exception as exc:
+                self.send_json({"error": str(exc)}, status=500)
+            return
         mode = data.get("mode", "weekly-review")
         message = data.get("message", "").strip()
         if not message:

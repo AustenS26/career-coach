@@ -1,6 +1,7 @@
 profile.local.md
 *.local.md
 references.local/*.md
+learning.local/*.md
 .env
 .env.*
 *.log

@@ -41,6 +41,16 @@ The coach supports a reusable reference layer:
 
 This allows the coach to answer cross-person general career questions first, then personalize when a local profile is present. See [docs/REFERENCE_SYSTEM.md](docs/REFERENCE_SYSTEM.md).
 
+## Self-Review And Learning Loop
+
+The coach can review its own sessions and save private local learning notes:
+
+- `templates/self-review.md` defines the review rubric.
+- `learning.local/*.md` stores local coaching lessons and is ignored by git.
+- `references.local/*.md` stores private source-backed notes.
+
+See [docs/ITERATION_LOOP.md](docs/ITERATION_LOOP.md).
+
 ## What This Builds
 
 The goal is a local-first career coaching assistant that can help with:
@@ -71,8 +81,10 @@ career-coach/
 │   ├── career-frameworks.md
 │   └── lenny-podcast-starter.md
 ├── references.local/              # private, ignored by git
+├── learning.local/                 # private, ignored by git
 ├── templates/
 │   ├── general-coaching.md
+│   ├── self-review.md
 │   ├── weekly-review.md
 │   ├── mock-interview.md
 │   ├── resume-review.md
@@ -93,6 +105,7 @@ career-coach/
 | `context/coaching-principles.md` | Rules for how the coach should diagnose, challenge, and recommend |
 | `references/` | Public generic reference principles |
 | `references.local/` | Private or licensed reference notes ignored by git |
+| `learning.local/` | Private self-review learnings ignored by git |
 | `templates/` | Repeatable workflows for common career scenarios |
 | `index.html` | Generic front-end template for the coaching experience |
 | `server.py` | Local backend that loads context, assembles prompts, and calls a model provider |
@@ -171,6 +184,16 @@ cp context/domain-knowledge.md context/domain-knowledge.local.md
 
 这样它可以先处理跨个体的通用职业问题；如果本地有个人画像，再进一步个性化。详见 [docs/REFERENCE_SYSTEM.md](docs/REFERENCE_SYSTEM.md)。
 
+## 自我审查与学习闭环
+
+coach 可以对自己的会话做复盘，并把可复用教训保存到本地：
+
+- `templates/self-review.md` 定义自查标准
+- `learning.local/*.md` 保存本地 coaching 教训，默认不进 git
+- `references.local/*.md` 保存私有 source 笔记
+
+详见 [docs/ITERATION_LOOP.md](docs/ITERATION_LOOP.md)。
+
 ## 这个项目构建什么
 
 目标是一个 local-first 的职业教练助手，支持：
@@ -201,8 +224,10 @@ career-coach/
 │   ├── career-frameworks.md
 │   └── lenny-podcast-starter.md
 ├── references.local/              # private, ignored by git
+├── learning.local/                 # private, ignored by git
 ├── templates/
 │   ├── general-coaching.md
+│   ├── self-review.md
 │   ├── weekly-review.md
 │   ├── mock-interview.md
 │   ├── resume-review.md
@@ -223,6 +248,7 @@ career-coach/
 | `context/coaching-principles.md` | 定义教练如何诊断、挑战和给建议 |
 | `references/` | 公开通用 reference 原则 |
 | `references.local/` | 私有或授权 reference 笔记，默认不进 git |
+| `learning.local/` | 私有自我审查和迭代记录，默认不进 git |
 | `templates/` | 常见职业场景的可复用工作流 |
 | `index.html` | 通用前端体验模板 |
 | `server.py` | 本地后端，负责加载上下文、组装 prompt、调用模型 |

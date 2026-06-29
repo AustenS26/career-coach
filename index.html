@@ -183,6 +183,21 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
   padding:0 18px;
   cursor:pointer;
 }
+.review-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+.secondary{
+  height:38px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  color:var(--text);
+  font-weight:650;
+  padding:0 12px;
+  cursor:pointer;
+}
 .side{
   border-left:1px solid var(--line);
   background:#fbfaf7;
@@ -301,8 +316,8 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
   <main class="main">
     <header class="topbar">
       <div>
-        <h2 id="modeTitle">Weekly Review</h2>
-        <p id="modeSub">Find leverage, blockers, and one action for next week</p>
+        <h2 id="modeTitle">General Coaching</h2>
+        <p id="modeSub">Answer cross-person career questions from references first</p>
       </div>
       <div class="status"><span class="dot"></span><span id="appStatus">Checking local context</span></div>
     </header>
@@ -310,7 +325,7 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
     <section class="chat" id="chat">
       <article class="message">
         <h3>Coach</h3>
-        <p>Start with the most important work from this week. What created visible impact, and who noticed it?</p>
+        <p>Ask a general career question. I will answer from loaded references first, then ask for personal context only if needed.</p>
         <div class="rubric">
           <div><b>Signal</b><span>Impact evidence</span></div>
           <div><b>Constraint</b><span>What blocked progress</span></div>
@@ -332,6 +347,10 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
     </section>
 
     <footer class="composer">
+      <div class="review-actions">
+        <button class="secondary" type="button" id="reflectBtn">Self Review</button>
+        <button class="secondary" type="button" id="saveLearningBtn">Save Learning</button>
+      </div>
       <div class="composer-inner">
         <textarea id="input" placeholder="Type a scenario. The local backend will combine this with the selected workflow and your private local context files."></textarea>
         <button class="send" type="button">Preview</button>
@@ -345,6 +364,7 @@ textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(36,107,79,.12
       <div class="kv">
         <div><span>Generic frameworks</span><b>Public</b></div>
         <div><span>Reference library</span><b id="referenceStatus">Loading</b></div>
+        <div><span>Learning notes</span><b id="learningStatus">Loading</b></div>
         <div><span>Domain knowledge</span><b>Public or curated</b></div>
         <div><span>User profile</span><b>Private local</b></div>
         <div><span>Session notes</span><b>Private local</b></div>
@@ -382,6 +402,8 @@ const input = document.getElementById('input');
 const statusText = document.getElementById('appStatus');
 const activeTemplate = document.getElementById('activeTemplate');
 let activeMode = 'general-coaching';
+let messages = [];
+let lastReflection = '';
 const copy = {
   'General Coaching': 'Ask a general career question. I will answer from loaded references first, then ask for personal context only if needed.',
   'Weekly Review': 'Start with the most important work from this week. What created visible impact, and who noticed it?',
@@ -413,6 +435,7 @@ function addMessage(role, text) {
   article.appendChild(body);
   chat.appendChild(article);
   chat.scrollTop = chat.scrollHeight;
+  messages.push({role, content: text});
 }
 
 document.querySelector('.send').addEventListener('click', async () => {
@@ -442,13 +465,59 @@ fetch('/api/status')
   .then(data => {
     const profile = data.hasPrivateProfile ? 'private profile loaded' : 'example profile loaded';
     const refs = `${data.publicReferenceCount || 0} public refs, ${data.privateReferenceCount || 0} private refs`;
+    const learnings = `${data.learningCount || 0} local notes`;
     const model = data.hasDeepSeek || data.hasOpenAI ? 'model enabled' : 'preview mode';
     document.getElementById('referenceStatus').textContent = refs;
-    statusText.textContent = profile + ', ' + refs + ', ' + model;
+    document.getElementById('learningStatus').textContent = learnings;
+    statusText.textContent = profile + ', ' + refs + ', ' + learnings + ', ' + model;
   })
   .catch(() => {
     statusText.textContent = 'Open through server.py for backend mode';
   });
+
+document.getElementById('reflectBtn').addEventListener('click', async () => {
+  if (!messages.length) {
+    addMessage('coach', 'Run a coaching exchange first, then use Self Review.');
+    return;
+  }
+  statusText.textContent = 'Reviewing session';
+  try {
+    const response = await fetch('/api/reflect', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({mode: activeMode, messages})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Review failed');
+    lastReflection = data.reflection;
+    addMessage('coach', 'Self Review\n\n' + data.reflection);
+    statusText.textContent = 'Review ready';
+  } catch (error) {
+    addMessage('coach', 'Self-review failed. Check the backend logs.');
+    statusText.textContent = 'Review failed';
+  }
+});
+
+document.getElementById('saveLearningBtn').addEventListener('click', async () => {
+  if (!lastReflection) {
+    addMessage('coach', 'Run Self Review before saving a learning note.');
+    return;
+  }
+  try {
+    const response = await fetch('/api/save-learning', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({reflection: lastReflection})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Save failed');
+    addMessage('coach', 'Saved local learning note to: ' + data.path);
+    statusText.textContent = 'Learning saved';
+  } catch (error) {
+    addMessage('coach', 'Could not save learning note. Check backend logs.');
+    statusText.textContent = 'Save failed';
+  }
+});
 </script>
 </body>
 </html>
